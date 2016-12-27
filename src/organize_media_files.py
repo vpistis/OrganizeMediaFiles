@@ -26,9 +26,10 @@ REMOVE_OLD_FILES = False
 
 APPEND_ORIG_FILENAME = False
 # process only files with this extensions
-FILES_EXTENSIONS = (".mp4", ".3gp")
-# FILES_EXTENSIONS = (".jpg", ".gif", ".tiff")
-FILENAME_SUFFIX = "VID_"
+# FILES_EXTENSIONS = (".mp4", ".3gp")
+FILES_EXTENSIONS = (".jpg", ".gif", ".tiff")
+# FILENAME_SUFFIX = "VID_"
+FILENAME_SUFFIX = "IMG_"
 DATE_FORMAT_OUTPUT = "%Y%m%d_%H%M%S%f"
 
 # in case you use nextcloud or owncloud, set NEXTCLOUD=True to rescan all files
@@ -136,6 +137,7 @@ def organize_files():
                             if filecmp.cmp(filename, out_filename + '_duplicate'):
                                 # the old file name exists...skip file
                                 os.remove(out_filename + '_duplicate')
+                                print("Skipped file: {}".format(filename))
                                 continue
 
                     # copy the file to the organised structure

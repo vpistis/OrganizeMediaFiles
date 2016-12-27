@@ -1,4 +1,4 @@
-#OrganizeMediaFiles Beta
+#OrganizeMediaFiles Alpha
 
 This project is a collection of Python scripts that help to organize media
 files into a directory tree "year/month" based on file metadata, using [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
@@ -14,7 +14,7 @@ Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/mast
 + Check duplicate files due to milliseconds difference (the new file uses the same old name).
 + support all file types supported by [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
 
-# ATTENTION beta version
+# ATTENTION alpha version
 **Allways backup all your files before use!**
 
 ## Getting OrganizeMediaFiles:
