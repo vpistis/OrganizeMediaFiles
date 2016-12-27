@@ -11,7 +11,7 @@ Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/mast
 ![final result](final_result.png)
 
 ## Features
-+ Check duplicate files and remove the old file only if the duplicate is the same file.
++ Check duplicate files due to milliseconds difference (the new file uses the same old name).
 + support all file types supported by [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
 
 # ATTENTION beta version

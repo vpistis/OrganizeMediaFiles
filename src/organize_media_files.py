@@ -127,31 +127,27 @@ def organize_files():
                     if not os.path.exists(out_filepath):
                         os.makedirs(out_filepath)
 
-                    # don't overwrite file if the name is the same
-                    if not os.path.exists(out_filename):
-                        # copy the file to the organised structure
-                        shutil.copy2(filename, out_filename)
-                        # verify if file is the same and display output
-                        if filecmp.cmp(filename, out_filename):
-                            print('File copied with success to {}'.format(out_filename))
-                            if REMOVE_OLD_FILES:
-                                os.remove(filename)
-                                print('Removed old file {}'.format(filename))
-                        else:
-                            print('File failed to copy :( {}'.format(filename))
+                    # don't overwrite files if the name is the same
+                    if os.path.exists(out_filename):
+                        # new dest path but old filename
+                        out_filename = out_filepath + os.sep + file
+                        if os.path.exists(out_filename):
+                            shutil.copy2(filename, out_filename + '_duplicate')
+                            if filecmp.cmp(filename, out_filename + '_duplicate'):
+                                # the old file name exists...skip file
+                                os.remove(out_filename + '_duplicate')
+                                continue
+
+                    # copy the file to the organised structure
+                    shutil.copy2(filename, out_filename)
+                    # verify if file is the same and display output
+                    if filecmp.cmp(filename, out_filename):
+                        print('File copied with success to {}'.format(out_filename))
+                        if REMOVE_OLD_FILES:
+                            os.remove(filename)
+                            print('Removed old file {}'.format(filename))
                     else:
-                        duplicate_filename = out_filename + "_DUPLICATE"
-                        shutil.copy2(filename, duplicate_filename)
-                        # check if duplicates are the same file
-                        if filecmp.cmp(out_filename, duplicate_filename):
-                            os.remove(duplicate_filename)
-                            print('File already exists: {}'.format(out_filename))
-                            if REMOVE_OLD_FILES:
-                                os.remove(filename)
-                                print('Removed old file {}'.format(filename))
-                        else:
-                            print('ATTENTION! File and DUPLICATE not the same file: {}'.format(out_filename,
-                                                                                               duplicate_filename))
+                        print('File failed to copy :( {}'.format(filename))
 
                 except Exception as e:
                     print("{}".format(e))
