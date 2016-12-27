@@ -1,3 +1,0 @@
-ExifRead==2.1.2
-#PyExifTool==0.1
-git+https://github.com/vpistis/pyexiftool.git
