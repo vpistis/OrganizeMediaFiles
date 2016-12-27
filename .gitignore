@@ -1,0 +1,18 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+*~
+.DS_Store
+bin/*
+bin
+.svn
+gen
+gen/*
+Thumbs.db
+*.pyc
+*.diff
+*.
+*.class
+web/WEB-INF/classes
+.settings
+.idea
+.vagrant
