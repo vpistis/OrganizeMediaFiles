@@ -1,10 +1,10 @@
 This project is a collection of Python scripts that help to organize
 `.jpg` and `.mp4` files into a direcotry tree "year/month".
 
-## NOTE:
+# NOTE:
  The script `sort_photos.py` is strongly inpsired by this: https://github.com/OneLogicalMyth/Random-Scripts/blob/master/NextCloud/SortPictures.py
 
-## LICENSE:
+# LICENSE:
 MIT License
 
 Copyright (c) 2016 Valentino Pistis
