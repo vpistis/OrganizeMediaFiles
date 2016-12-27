@@ -26,10 +26,10 @@ REMOVE_OLD_FILES = False
 
 APPEND_ORIG_FILENAME = False
 # process only files with this extensions
-FILES_EXTENSIONS = tuple(".mp4", ".3gp")
-# FILES_EXTENSIONS = tuple(".jpg", ".gif", ".tiff")
+FILES_EXTENSIONS = (".mp4", ".3gp")
+# FILES_EXTENSIONS = (".jpg", ".gif", ".tiff")
 FILENAME_SUFFIX = "VID_"
-DATE_FORMAT_OUTPUT = "%Y%m%d_%H%M%S"
+DATE_FORMAT_OUTPUT = "%Y%m%d_%H%M%S%f"
 
 # in case you use nextcloud or owncloud, set NEXTCLOUD=True to rescan all files
 NEXTCLOUD = True
@@ -81,7 +81,7 @@ def get_file_name(filename):
     try:
         command = ["exiftool", "-filename", "-s3", "-fast2", filename]
         metadata = subprocess.check_output(command)
-        return metadata
+        return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
         return None
