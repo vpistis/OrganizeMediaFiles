@@ -8,7 +8,7 @@ Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/mast
 
 **Tested only with Linux python3**
 
-(final result)[final_result.png]
+![final result](final_result.png)
 
 ## Features
 + Check duplicate files and remove the old file only if the duplicate is the same file.
