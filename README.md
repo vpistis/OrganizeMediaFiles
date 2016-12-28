@@ -6,7 +6,7 @@ files into a directory tree "year/month" based on file metadata, using [exiftool
 Used by me into my personal [Nextcloud](https://www.nextcloud.com) installation to organize unsorted files.
 Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/master/NextCloud/SortPictures.py
 
-**Tested only with Linux/Debian python 2.7.9**
+**Tested only with Linux/Debian python 2.7.9 and MacOS python 2.7.13**
 
 **ATTENTION alpha version backup your files before use!**
 
@@ -16,8 +16,7 @@ This picture describe the final result:
 ## Features
 + manages duplicate files due to milliseconds difference (the new file uses the same old name).
 + support all file types supported by [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
-
-
++ proccess video and photo at same time (see `config.json`)
 
 ## Getting OrganizeMediaFiles:
 Clone the repository: `git clone https://github.com/vpistis/OrganizeMediaFiles.git`.
@@ -36,27 +35,7 @@ Open the script, adjust variables and run with python:
 
 ## Configuration
 **Important**: process only photo/video/audio files with specified extensions
-```
-# config no trailing slashes please
-SOURCE_PATH = "/media/drivemount/user/files/FilesToSort"
-DESTINATION_PATH = "/media/drivemount/user/files/FilesSorted"
-
-# If false copy file and don't remove old file
-REMOVE_OLD_FILES = False
-
-APPEND_ORIG_FILENAME = False
-# process only files with this extensions
-FILES_EXTENSIONS = tuple(".mp4", ".3gp")
-# FILES_EXTENSIONS = tuple(".jpg", ".gif", ".tiff")
-FILENAME_SUFFIX = "VID_"
-DATE_FORMAT_OUTPUT = "%Y%m%d_%H%M%S"
-
-# in case you use nextcloud or owncloud, set NEXTCLOUD=True to rescan all files
-NEXTCLOUD = True
-NEXTCLOUD_PATH = "/var/www/html/nextcloud"
-NEXTCLOUD_USER = "www-data"
-
-```
+Use the `config.json` to change paths and other stuff.
 
 # LICENSE
 MIT License
