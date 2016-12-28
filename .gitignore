@@ -16,3 +16,4 @@ web/WEB-INF/classes
 .settings
 .idea
 .vagrant
+*.log

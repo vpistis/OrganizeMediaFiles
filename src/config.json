@@ -24,7 +24,7 @@
     ".3gp"
   ],
 
-  "NEXTCLOUD": true,
+  "NEXTCLOUD": false,
   "NEXTCLOUD_PATH": "/var/www/html/nextcloud",
   "NEXTCLOUD_USER": "www-data"
 }

@@ -20,7 +20,9 @@ import subprocess
 import sys
 import timeit
 
-with open("config.json") as f:
+BASE_DIR = str(os.path.dirname(__file__))
+
+with open(BASE_DIR + "/config.json") as f:
     config_json = json.loads(f.read())
 
 
@@ -33,10 +35,37 @@ def get_setting(key, config=config_json):
         raise Exception(error_msg)
 
 
+def which(program):
+    """
+    Check if a program/executable exists
+
+    :param program:
+    :return:
+    """
+
+    def is_exe(f_path):
+        return os.path.isfile(f_path) and os.access(f_path, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+
 class Logger(object):
     """
     http://stackoverflow.com/a/14906787/5941790
     """
+
     def __init__(self):
         self.terminal = sys.stdout
         self.log = open(get_setting("LOG_FILE"), "a")
@@ -51,20 +80,20 @@ class Logger(object):
         # you might want to specify some extra behavior here.
         pass
 
-sys.stdout = Logger()
 
+sys.stdout = Logger()
 
 PROCESS_IMAGES = get_setting("PROCESS_IMAGES")
 PROCESS_VIDEOS = get_setting("PROCESS_VIDEOS")
 
 IMAGES_SOURCE_PATH = get_setting("IMAGES_SOURCE_PATH")
 IMAGES_DESTINATION_PATH = get_setting("IMAGES_DESTINATION_PATH")
-IMAGE_FILES_EXTENSIONS = get_setting("IMAGE_FILES_EXTENSIONS")
+IMAGE_FILES_EXTENSIONS = tuple(get_setting("IMAGE_FILES_EXTENSIONS"))
 IMAGE_FILENAME_SUFFIX = get_setting("IMAGE_FILENAME_SUFFIX")
 
 VIDEOS_SOURCE_PATH = get_setting("VIDEOS_SOURCE_PATH")
 VIDEOS_DESTINATION_PATH = get_setting("VIDEOS_DESTINATION_PATH")
-VIDEO_FILES_EXTENSIONS = get_setting("VIDEO_FILES_EXTENSIONS")
+VIDEO_FILES_EXTENSIONS = tuple(get_setting("VIDEO_FILES_EXTENSIONS"))
 VIDEO_FILENAME_SUFFIX = get_setting("VIDEO_FILENAME_SUFFIX")
 
 # If false copy file and don't remove old file
@@ -109,6 +138,7 @@ def get_create_date(filename):
 
     except Exception as e:
         print("{}".format(e))
+        print("exiftool is installed?")
         return None
 
 
@@ -125,6 +155,7 @@ def get_file_name(filename):
         return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
+        print("exiftool is installed?")
         return None
 
 
@@ -158,12 +189,14 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
     if len(os.listdir(_src_path)) <= 0:
         print("No files in path: {}".format(_src_path))
-        return
+        return 0, 0, 0
     else:
         num_files_processed = 0
-        num_files_moved = 0
+        num_files_removed = 0
+        num_files_copied = 0
+
         for file in os.listdir(_src_path):
-            if file.endswith(_files_extensions):
+            if file.lower().endswith(_files_extensions):
 
                 num_files_processed += 1
 
@@ -197,10 +230,11 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                     # copy the file to the organised structure
                     shutil.copy2(filename, out_filename)
                     if filecmp.cmp(filename, out_filename):
-                        num_files_moved += 1
+                        num_files_copied += 1
                         print('File copied with success to {}'.format(out_filename))
                         if REMOVE_OLD_FILES:
                             os.remove(filename)
+                            num_files_removed += 1
                             print('Removed old file {}'.format(filename))
                     else:
                         print('File failed to copy :( {}'.format(filename))
@@ -208,10 +242,10 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                 except Exception as e:
                     print("{}".format(e))
                     print("Exception occurred")
-                    return num_files_processed, num_files_moved
+                    return num_files_processed, num_files_removed, num_files_copied
                 except None:
                     print('File has no metadata skipped {}'.format(filename))
-    return num_files_processed, num_files_moved
+    return num_files_processed, num_files_removed, num_files_copied
 
 
 # Nextcloud initiate a scan
@@ -227,22 +261,30 @@ def nextcloud_files_scan():
 
 
 def main():
+    # check if exiftool is installed
+    if not which("exiftool"):
+        print("Please...install exiftool first")
+        return
+
+    print("======== {} =======".format(datetime.datetime.now()))
     if PROCESS_IMAGES:
         print("Start process images...")
         start_time = timeit.default_timer()
-        processed, moved = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
-                                          IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
+        processed, removed, copied = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
+                                                    IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
         print("End process images in: {}".format(elapsed))
-        print("Proccessed: {} image files. Moved {} image files".format(processed, moved))
+        print("Proccessed: {} image files. Removed {} image files. Copied {} image files.".format(processed,
+                                                                                                  removed, copied))
     if PROCESS_VIDEOS:
         print("Start process videos...")
         start_time = timeit.default_timer()
-        processed, moved = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
-                                          VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
+        processed, removed, copied = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
+                                                    VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
         print("End process videos in: {}".format(elapsed))
-        print("Proccessed: {} video files. Moved {} imavideoge files".format(processed, moved))
+        print("Proccessed: {} video files. Removed {} video files. Copied {} video files".format(processed,
+                                                                                                 removed, copied))
 
     return
 
