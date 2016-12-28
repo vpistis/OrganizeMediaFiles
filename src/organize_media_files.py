@@ -194,6 +194,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
         num_files_processed = 0
         num_files_removed = 0
         num_files_copied = 0
+        num_files_skipped = 0
 
         for file in os.listdir(_src_path):
             if file.lower().endswith(_files_extensions):
@@ -217,15 +218,25 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
                     # don't overwrite files if the name is the same
                     if os.path.exists(out_filename):
-                        # new dest path but old filename
-                        out_filename = out_filepath + os.sep + file
-                        if os.path.exists(out_filename):
-                            shutil.copy2(filename, out_filename + '_duplicate')
-                            if filecmp.cmp(filename, out_filename + '_duplicate'):
-                                # the old file name exists...skip file
-                                os.remove(out_filename + '_duplicate')
-                                print("Skipped file: {}".format(filename))
-                                continue
+                        shutil.copy2(filename, out_filename + '_duplicate')
+                        if filecmp.cmp(filename, out_filename + '_duplicate'):
+                            # the old file name exists...skip file
+                            os.remove(out_filename + '_duplicate')
+                            num_files_skipped += 1
+                            print("Skipped file: {}".format(filename))
+                            continue
+                        else:
+                            # new dest path but old filename
+                            out_filename = out_filepath + os.sep + file
+
+                            if os.path.exists(out_filename):
+                                shutil.copy2(filename, out_filename + '_duplicate')
+                                if filecmp.cmp(filename, out_filename + '_duplicate'):
+                                    # the old file name exists...skip file
+                                    os.remove(out_filename + '_duplicate')
+                                    num_files_skipped += 1
+                                    print("Skipped file: {}".format(filename))
+                                    continue
 
                     # copy the file to the organised structure
                     shutil.copy2(filename, out_filename)
@@ -242,10 +253,10 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                 except Exception as e:
                     print("{}".format(e))
                     print("Exception occurred")
-                    return num_files_processed, num_files_removed, num_files_copied
+                    return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
                 except None:
                     print('File has no metadata skipped {}'.format(filename))
-    return num_files_processed, num_files_removed, num_files_copied
+    return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
 
 
 # Nextcloud initiate a scan
@@ -270,21 +281,21 @@ def main():
     if PROCESS_IMAGES:
         print("Start process images...")
         start_time = timeit.default_timer()
-        processed, removed, copied = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
-                                                    IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
+        processed, removed, copied, skipped = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
+                                                             IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
         print("End process images in: {}".format(elapsed))
-        print("Proccessed: {} image files. Removed {} image files. Copied {} image files.".format(processed,
-                                                                                                  removed, copied))
+        print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
+                                                                            removed, copied, skipped))
     if PROCESS_VIDEOS:
         print("Start process videos...")
         start_time = timeit.default_timer()
-        processed, removed, copied = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
-                                                    VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
+        processed, removed, copied, skipped = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
+                                                             VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
         print("End process videos in: {}".format(elapsed))
-        print("Proccessed: {} video files. Removed {} video files. Copied {} video files".format(processed,
-                                                                                                 removed, copied))
+        print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
+                                                                            removed, copied, skipped))
 
     return
 
