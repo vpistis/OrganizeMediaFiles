@@ -8,28 +8,29 @@ Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/mast
 
 **Tested only with Linux/Debian python 2.7.9**
 
+**ATTENTION alpha version backup your files before use!**
+
 This picture describe the final result:
 ![final result](final_result.png)
 
 ## Features
-+ Check duplicate files due to milliseconds difference (the new file uses the same old name).
++ manages duplicate files due to milliseconds difference (the new file uses the same old name).
 + support all file types supported by [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
 
-# ATTENTION alpha version
-**Allways backup all your files before use!**
+
 
 ## Getting OrganizeMediaFiles:
 Clone the repository: `git clone https://github.com/vpistis/OrganizeMediaFiles.git`.
 Alternatively download [tarball](https://github.com/vpistis/OrganizeMediaFiles/tarball/master) or [zip](https://github.com/vpistis/OrganizeMediaFiles/archive/master.zip). There haven't been any releases yet.
 
-##Installation:
+##Installation
 No installation required, it's a simple python script :) It run in `python`.
 
 ##Requirements
 Install [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/) commandline:
 `sudo apt-get install exiftool`
 
-##Usage:
+##Usage
 Open the script, adjust variables and run with python:
 `python organize_media_files.py`
 
@@ -57,7 +58,7 @@ NEXTCLOUD_USER = "www-data"
 
 ```
 
-# LICENSE:
+# LICENSE
 MIT License
 
 Copyright (c) 2016 Valentino Pistis
