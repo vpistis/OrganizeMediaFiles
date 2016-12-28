@@ -11,35 +11,104 @@ Created on 27/12/16 15:53
 
 @author: vpistis
 """
-import filecmp
 import datetime
+import filecmp
+import json
 import os
 import shutil
 import subprocess
+import sys
+import timeit
 
-# config no trailing slashes please
-SOURCE_PATH = "/media/drivemount/user/files/FilesToSort"
-DESTINATION_PATH = "/media/drivemount/user/files/FilesSorted"
+BASE_DIR = str(os.path.dirname(__file__))
+
+with open(BASE_DIR + "/config.json") as f:
+    config_json = json.loads(f.read())
+
+
+def get_setting(key, config=config_json):
+    """Get the secret variable or return explicit exception."""
+    try:
+        return config[key]
+    except KeyError:
+        error_msg = "Set the {0} environment variable".format(key)
+        raise Exception(error_msg)
+
+
+def which(program):
+    """
+    Check if a program/executable exists
+
+    :param program:
+    :return:
+    """
+
+    def is_exe(f_path):
+        return os.path.isfile(f_path) and os.access(f_path, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+
+class Logger(object):
+    """
+    http://stackoverflow.com/a/14906787/5941790
+    """
+
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open(get_setting("LOG_FILE"), "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass
+
+
+sys.stdout = Logger()
+
+PROCESS_IMAGES = get_setting("PROCESS_IMAGES")
+PROCESS_VIDEOS = get_setting("PROCESS_VIDEOS")
+
+IMAGES_SOURCE_PATH = get_setting("IMAGES_SOURCE_PATH")
+IMAGES_DESTINATION_PATH = get_setting("IMAGES_DESTINATION_PATH")
+IMAGE_FILES_EXTENSIONS = tuple(get_setting("IMAGE_FILES_EXTENSIONS"))
+IMAGE_FILENAME_SUFFIX = get_setting("IMAGE_FILENAME_SUFFIX")
+
+VIDEOS_SOURCE_PATH = get_setting("VIDEOS_SOURCE_PATH")
+VIDEOS_DESTINATION_PATH = get_setting("VIDEOS_DESTINATION_PATH")
+VIDEO_FILES_EXTENSIONS = tuple(get_setting("VIDEO_FILES_EXTENSIONS"))
+VIDEO_FILENAME_SUFFIX = get_setting("VIDEO_FILENAME_SUFFIX")
 
 # If false copy file and don't remove old file
-REMOVE_OLD_FILES = False
+REMOVE_OLD_FILES = get_setting("REMOVE_OLD_FILES")
 
-APPEND_ORIG_FILENAME = False
+APPEND_ORIG_FILENAME = get_setting("APPEND_ORIG_FILENAME")
 # process only files with this extensions
-# FILES_EXTENSIONS = (".mp4", ".3gp")
-FILES_EXTENSIONS = (".jpg", ".gif", ".tiff")
-# FILENAME_SUFFIX = "VID_"
-FILENAME_SUFFIX = "IMG_"
-DATE_FORMAT_OUTPUT = "%Y%m%d_%H%M%S%f"
+
+
+DATE_FORMAT_OUTPUT = get_setting("DATE_FORMAT_OUTPUT")
 
 # in case you use nextcloud or owncloud, set NEXTCLOUD=True to rescan all files
-NEXTCLOUD = True
-NEXTCLOUD_PATH = "/var/www/html/nextcloud"
-NEXTCLOUD_USER = "www-data"
-
-# check if destination path is existing create if not
-if not os.path.exists(DESTINATION_PATH):
-    os.makedirs(DESTINATION_PATH)
+NEXTCLOUD = get_setting("NEXTCLOUD")
+NEXTCLOUD_PATH = get_setting("NEXTCLOUD_PATH")
+NEXTCLOUD_USER = get_setting("NEXTCLOUD_USER")
 
 
 def get_create_date(filename):
@@ -69,6 +138,7 @@ def get_create_date(filename):
 
     except Exception as e:
         print("{}".format(e))
+        print("exiftool is installed?")
         return None
 
 
@@ -85,6 +155,7 @@ def get_file_name(filename):
         return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
+        print("exiftool is installed?")
         return None
 
 
@@ -100,29 +171,46 @@ def get_file_ext(filename):
     return extension
 
 
-def organize_files():
+def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
     """
     Get all files from directory and process
 
     :return:
     """
-    if len(os.listdir(SOURCE_PATH)) <= 0:
-        print("No files in path: {}".format(SOURCE_PATH))
-        exit()
-    else:
-        for file in os.listdir(SOURCE_PATH):
-            if file.endswith(FILES_EXTENSIONS):
+    _src_path = src_path
+    _dest_path = dest_path
+    _files_extensions = files_extensions
+    _filename_suffix = filename_suffix
 
-                filename = SOURCE_PATH + os.sep + file
+    # check if destination path is existing create if not
+    if not os.path.exists(_dest_path):
+        os.makedirs(_dest_path)
+        print("Destination path created: {}".format(_dest_path))
+
+    if len(os.listdir(_src_path)) <= 0:
+        print("No files in path: {}".format(_src_path))
+        return 0, 0, 0
+    else:
+        num_files_processed = 0
+        num_files_removed = 0
+        num_files_copied = 0
+        num_files_skipped = 0
+
+        for file in os.listdir(_src_path):
+            if file.lower().endswith(_files_extensions):
+
+                num_files_processed += 1
+
+                filename = _src_path + os.sep + file
                 file_ext = get_file_ext(filename)
                 dateinfo = get_create_date(filename)
 
                 try:
-                    out_filepath = DESTINATION_PATH + os.sep + dateinfo[2] + os.sep + dateinfo[1]
+                    out_filepath = _dest_path + os.sep + dateinfo[2] + os.sep + dateinfo[1]
                     if APPEND_ORIG_FILENAME:
-                        out_filename = out_filepath + os.sep + FILENAME_SUFFIX + dateinfo[3] + '_' + file
+                        out_filename = out_filepath + os.sep + _filename_suffix + dateinfo[3] + '_' + file
                     else:
-                        out_filename = out_filepath + os.sep + FILENAME_SUFFIX + dateinfo[3] + file_ext
+                        out_filename = out_filepath + os.sep + _filename_suffix + dateinfo[3] + file_ext
 
                     # check if destination path is existing create if not
                     if not os.path.exists(out_filepath):
@@ -130,23 +218,34 @@ def organize_files():
 
                     # don't overwrite files if the name is the same
                     if os.path.exists(out_filename):
-                        # new dest path but old filename
-                        out_filename = out_filepath + os.sep + file
-                        if os.path.exists(out_filename):
-                            shutil.copy2(filename, out_filename + '_duplicate')
-                            if filecmp.cmp(filename, out_filename + '_duplicate'):
-                                # the old file name exists...skip file
-                                os.remove(out_filename + '_duplicate')
-                                print("Skipped file: {}".format(filename))
-                                continue
+                        shutil.copy2(filename, out_filename + '_duplicate')
+                        if filecmp.cmp(filename, out_filename + '_duplicate'):
+                            # the old file name exists...skip file
+                            os.remove(out_filename + '_duplicate')
+                            num_files_skipped += 1
+                            print("Skipped file: {}".format(filename))
+                            continue
+                        else:
+                            # new dest path but old filename
+                            out_filename = out_filepath + os.sep + file
+
+                            if os.path.exists(out_filename):
+                                shutil.copy2(filename, out_filename + '_duplicate')
+                                if filecmp.cmp(filename, out_filename + '_duplicate'):
+                                    # the old file name exists...skip file
+                                    os.remove(out_filename + '_duplicate')
+                                    num_files_skipped += 1
+                                    print("Skipped file: {}".format(filename))
+                                    continue
 
                     # copy the file to the organised structure
                     shutil.copy2(filename, out_filename)
-                    # verify if file is the same and display output
                     if filecmp.cmp(filename, out_filename):
+                        num_files_copied += 1
                         print('File copied with success to {}'.format(out_filename))
                         if REMOVE_OLD_FILES:
                             os.remove(filename)
+                            num_files_removed += 1
                             print('Removed old file {}'.format(filename))
                     else:
                         print('File failed to copy :( {}'.format(filename))
@@ -154,10 +253,10 @@ def organize_files():
                 except Exception as e:
                     print("{}".format(e))
                     print("Exception occurred")
-                    exit()
+                    return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
                 except None:
                     print('File has no metadata skipped {}'.format(filename))
-    return
+    return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
 
 
 # Nextcloud initiate a scan
@@ -172,6 +271,35 @@ def nextcloud_files_scan():
     return
 
 
+def main():
+    # check if exiftool is installed
+    if not which("exiftool"):
+        print("Please...install exiftool first")
+        return
+
+    print("======== {} =======".format(datetime.datetime.now()))
+    if PROCESS_IMAGES:
+        print("Start process images...")
+        start_time = timeit.default_timer()
+        processed, removed, copied, skipped = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
+                                                             IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
+        elapsed = timeit.default_timer() - start_time
+        print("End process images in: {}".format(elapsed))
+        print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
+                                                                            removed, copied, skipped))
+    if PROCESS_VIDEOS:
+        print("Start process videos...")
+        start_time = timeit.default_timer()
+        processed, removed, copied, skipped = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
+                                                             VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
+        elapsed = timeit.default_timer() - start_time
+        print("End process videos in: {}".format(elapsed))
+        print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
+                                                                            removed, copied, skipped))
+
+    return
+
+
 # Execution
-organize_files()
+main()
 nextcloud_files_scan()
