@@ -6,8 +6,9 @@ files into a directory tree "year/month" based on file metadata, using [exiftool
 Used by me into my personal [Nextcloud](https://www.nextcloud.com) installation to organize unsorted files.
 Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/master/NextCloud/SortPictures.py
 
-**Tested only with Linux python3**
+**Tested only with Linux/Debian python 2.7.9**
 
+This picture describe the final result:
 ![final result](final_result.png)
 
 ## Features
