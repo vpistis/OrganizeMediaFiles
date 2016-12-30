@@ -1,6 +1,6 @@
 {
   "LOG_FILE": "organize_media_files.log",
-
+  "RENAME_SORTED_FILES": false,
   "REMOVE_OLD_FILES": false,
   "APPEND_ORIG_FILENAME": false,
   "DATE_FORMAT_OUTPUT": "%Y%m%d_%H%M%S",
