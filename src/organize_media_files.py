@@ -55,8 +55,6 @@ def get_create_date(filename):
     :param filename:
     :return:
     """
-    # Read file
-    # open_file = open(filename, 'rb')
     command = ["exiftool", "-CreateDate", "-s3", "-fast2", filename]
     metadata = subprocess.check_output(command)
 
@@ -73,6 +71,23 @@ def get_create_date(filename):
         output = [day, month, year, datetaken_object.strftime(DATE_FORMAT_OUTPUT)]
         return output
 
+    except Exception as e:
+        print("{}".format(e))
+        print("exiftool is installed?")
+        return None
+
+
+def get_sub_sec_time_original(filename):
+    """
+    Get SubSecTimeOriginal from file metadata if exists
+
+    :param filename:
+    :return:
+    """
+    try:
+        command = ["exiftool", "-SubSecTimeOriginal", "-s3", "-fast2", filename]
+        metadata = subprocess.check_output(command)
+        return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
         print("exiftool is installed?")
@@ -140,15 +155,17 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
                 filename = _src_path + os.sep + file
                 file_ext = get_file_ext(filename)
-                dateinfo = get_create_date(filename)
+                date_info = get_create_date(filename)
 
                 try:
-                    out_filepath = _dest_path + os.sep + dateinfo[2] + os.sep + dateinfo[1]
+                    out_filepath = _dest_path + os.sep + date_info[2] + os.sep + date_info[1]
                     if RENAME_SORTED_FILES:
                         if APPEND_ORIG_FILENAME:
-                            out_filename = out_filepath + os.sep + _filename_suffix + dateinfo[3] + '_' + file
+                            out_filename = out_filepath + os.sep + _filename_suffix + date_info[3] \
+                                           + get_sub_sec_time_original(filename) + '_' + file
                         else:
-                            out_filename = out_filepath + os.sep + _filename_suffix + dateinfo[3] + file_ext
+                            out_filename = out_filepath + os.sep + _filename_suffix + date_info[3] \
+                                           + get_sub_sec_time_original(filename) + file_ext
                     else:
                         if APPEND_ORIG_FILENAME:
                             out_filename = out_filepath + os.sep + _filename_suffix + get_file_name(file) + '_' + file
