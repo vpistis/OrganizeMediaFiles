@@ -84,7 +84,7 @@ Default: `"VIDEOS_DESTINATION_PATH": "/media/drivemount/user/files/FilesSorted"`
 The root path where store the new organized video files.
 ###VIDEO_FILES_EXTENSIONS
 Default: `"VIDEO_FILES_EXTENSIONS": [".mp4",".3gp"]`.
-Files with these extensions are processed as videos see [IMAGE_FILES_EXTENSIONS](#IMAGE_FILES_EXTENSIONS) note.
+Files with these extensions are processed as videos see [IMAGE_FILES_EXTENSIONS](#image_files_extensions) note.
 ###NEXTCLOUD
 Default: `"NEXTCLOUD": false`.
 If `true` exec nextcloud command to rescan data directory for new files.
