@@ -11,6 +11,7 @@ Created on 27/12/16 15:53
 
 @author: vpistis
 """
+
 import datetime
 import filecmp
 import os
@@ -18,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import timeit
-from .utils import Logger, get_setting, which
+from utils import Logger, get_setting, which
 
 sys.stdout = Logger()
 
@@ -87,6 +88,7 @@ def get_sub_sec_time_original(filename):
     try:
         command = ["exiftool", "-SubSecTimeOriginal", "-s3", "-fast2", filename]
         metadata = subprocess.check_output(command)
+        # print(str(metadata.rstrip()))
         return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
@@ -104,6 +106,7 @@ def get_file_name(filename):
     try:
         command = ["exiftool", "-filename", "-s3", "-fast2", filename]
         metadata = subprocess.check_output(command)
+        # print(str(metadata.rstrip()))
         return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
@@ -244,7 +247,7 @@ def main():
         processed, removed, copied, skipped = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
                                                              IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
-        print("End process images in: {}".format(elapsed))
+        print("End process images in: {} seconds.".format(elapsed))
         print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
                                                                             removed, copied, skipped))
     if PROCESS_VIDEOS:
@@ -253,7 +256,7 @@ def main():
         processed, removed, copied, skipped = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
                                                              VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
-        print("End process videos in: {}".format(elapsed))
+        print("End process videos in: {} seconds.".format(elapsed))
         print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
                                                                             removed, copied, skipped))
 
