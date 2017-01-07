@@ -57,7 +57,7 @@ def get_create_date(filename):
     :return:
     """
     command = ["exiftool", "-CreateDate", "-s3", "-fast2", filename]
-    metadata = subprocess.check_output(command)
+    metadata = subprocess.check_output(command, universal_newlines=True)
 
     try:
         # Grab date taken
@@ -87,7 +87,7 @@ def get_sub_sec_time_original(filename):
     """
     try:
         command = ["exiftool", "-SubSecTimeOriginal", "-s3", "-fast2", filename]
-        metadata = subprocess.check_output(command)
+        metadata = subprocess.check_output(command, universal_newlines=True)
         # print(str(metadata.rstrip()))
         return metadata.rstrip()
     except Exception as e:
@@ -105,7 +105,7 @@ def get_file_name(filename):
     """
     try:
         command = ["exiftool", "-filename", "-s3", "-fast2", filename]
-        metadata = subprocess.check_output(command)
+        metadata = subprocess.check_output(command, universal_newlines=True)
         # print(str(metadata.rstrip()))
         return metadata.rstrip()
     except Exception as e:
