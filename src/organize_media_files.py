@@ -11,75 +11,15 @@ Created on 27/12/16 15:53
 
 @author: vpistis
 """
+
 import datetime
 import filecmp
-import json
 import os
 import shutil
 import subprocess
 import sys
 import timeit
-
-BASE_DIR = str(os.path.dirname(__file__))
-
-with open(BASE_DIR + "/config.json") as f:
-    config_json = json.loads(f.read())
-
-
-def get_setting(key, config=config_json):
-    """Get the secret variable or return explicit exception."""
-    try:
-        return config[key]
-    except KeyError:
-        error_msg = "Set the {0} environment variable".format(key)
-        raise Exception(error_msg)
-
-
-def which(program):
-    """
-    Check if a program/executable exists
-
-    :param program:
-    :return:
-    """
-
-    def is_exe(f_path):
-        return os.path.isfile(f_path) and os.access(f_path, os.X_OK)
-
-    fpath, fname = os.path.split(program)
-
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-
-class Logger(object):
-    """
-    http://stackoverflow.com/a/14906787/5941790
-    """
-
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open(get_setting("LOG_FILE"), "a")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        # this flush method is needed for python 3 compatibility.
-        # this handles the flush command by doing nothing.
-        # you might want to specify some extra behavior here.
-        pass
-
+from utils import Logger, get_setting, which
 
 sys.stdout = Logger()
 
@@ -98,13 +38,11 @@ VIDEO_FILENAME_SUFFIX = get_setting("VIDEO_FILENAME_SUFFIX")
 
 # If false copy file and don't remove old file
 REMOVE_OLD_FILES = get_setting("REMOVE_OLD_FILES")
-
 APPEND_ORIG_FILENAME = get_setting("APPEND_ORIG_FILENAME")
-# process only files with this extensions
-
-
+# if RENAME_SORTED_FILES=False, use this date format for naming files
 DATE_FORMAT_OUTPUT = get_setting("DATE_FORMAT_OUTPUT")
-
+# if false, sorted files keep their original name, else rename using CreateDate
+RENAME_SORTED_FILES = get_setting("RENAME_SORTED_FILES")
 # in case you use nextcloud or owncloud, set NEXTCLOUD=True to rescan all files
 NEXTCLOUD = get_setting("NEXTCLOUD")
 NEXTCLOUD_PATH = get_setting("NEXTCLOUD_PATH")
@@ -118,10 +56,8 @@ def get_create_date(filename):
     :param filename:
     :return:
     """
-    # Read file
-    # open_file = open(filename, 'rb')
     command = ["exiftool", "-CreateDate", "-s3", "-fast2", filename]
-    metadata = subprocess.check_output(command)
+    metadata = subprocess.check_output(command, universal_newlines=True)
 
     try:
         # Grab date taken
@@ -142,6 +78,24 @@ def get_create_date(filename):
         return None
 
 
+def get_sub_sec_time_original(filename):
+    """
+    Get SubSecTimeOriginal from file metadata if exists
+
+    :param filename:
+    :return:
+    """
+    try:
+        command = ["exiftool", "-SubSecTimeOriginal", "-s3", "-fast2", filename]
+        metadata = subprocess.check_output(command, universal_newlines=True)
+        # print(str(metadata.rstrip()))
+        return metadata.rstrip()
+    except Exception as e:
+        print("{}".format(e))
+        print("exiftool is installed?")
+        return None
+
+
 def get_file_name(filename):
     """
     Get real filename from metadata
@@ -151,7 +105,8 @@ def get_file_name(filename):
     """
     try:
         command = ["exiftool", "-filename", "-s3", "-fast2", filename]
-        metadata = subprocess.check_output(command)
+        metadata = subprocess.check_output(command, universal_newlines=True)
+        # print(str(metadata.rstrip()))
         return metadata.rstrip()
     except Exception as e:
         print("{}".format(e))
@@ -203,14 +158,22 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
                 filename = _src_path + os.sep + file
                 file_ext = get_file_ext(filename)
-                dateinfo = get_create_date(filename)
+                date_info = get_create_date(filename)
 
                 try:
-                    out_filepath = _dest_path + os.sep + dateinfo[2] + os.sep + dateinfo[1]
-                    if APPEND_ORIG_FILENAME:
-                        out_filename = out_filepath + os.sep + _filename_suffix + dateinfo[3] + '_' + file
+                    out_filepath = _dest_path + os.sep + date_info[2] + os.sep + date_info[1]
+                    if RENAME_SORTED_FILES:
+                        if APPEND_ORIG_FILENAME:
+                            out_filename = out_filepath + os.sep + _filename_suffix + date_info[3] \
+                                           + get_sub_sec_time_original(filename) + '_' + file
+                        else:
+                            out_filename = out_filepath + os.sep + _filename_suffix + date_info[3] \
+                                           + get_sub_sec_time_original(filename) + file_ext
                     else:
-                        out_filename = out_filepath + os.sep + _filename_suffix + dateinfo[3] + file_ext
+                        if APPEND_ORIG_FILENAME:
+                            out_filename = out_filepath + os.sep + _filename_suffix + get_file_name(file) + '_' + file
+                        else:
+                            out_filename = out_filepath + os.sep + _filename_suffix + get_file_name(file) + file_ext
 
                     # check if destination path is existing create if not
                     if not os.path.exists(out_filepath):
@@ -284,7 +247,7 @@ def main():
         processed, removed, copied, skipped = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
                                                              IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
-        print("End process images in: {}".format(elapsed))
+        print("End process images in: {} seconds.".format(elapsed))
         print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
                                                                             removed, copied, skipped))
     if PROCESS_VIDEOS:
@@ -293,7 +256,7 @@ def main():
         processed, removed, copied, skipped = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
                                                              VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
-        print("End process videos in: {}".format(elapsed))
+        print("End process videos in: {} seconds.".format(elapsed))
         print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
                                                                             removed, copied, skipped))
 
