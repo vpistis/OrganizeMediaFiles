@@ -173,7 +173,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                         if APPEND_ORIG_FILENAME:
                             out_filename = out_filepath + os.sep + _filename_suffix + get_file_name(filename) + '_' + file
                         else:
-                            out_filename = out_filepath + os.sep + _filename_suffix + get_file_name(filename) + file_ext
+                            out_filename = out_filepath + os.sep + _filename_suffix + get_file_name(filename)
 
                     # check if destination path is existing create if not
                     if not os.path.exists(out_filepath):
