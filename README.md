@@ -38,6 +38,8 @@ Configure using `config.json` and run with python:
 **Important**: process only photo/video (and maybe audio) files with specified extensions.
 Use the `config.json` to change paths and other stuff.
 
+**All paths are intended without any escaping char,like backslashes**
+
 ### LOG_FILE
 Default: `"LOG_FILE": "organize_media_files.log"`.
 Where is placed the log file.
