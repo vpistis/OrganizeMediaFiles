@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import timeit
-from utils import Logger, get_setting, which
+from .utils import Logger, get_setting, which
 
 sys.stdout = Logger()
 

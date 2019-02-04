@@ -13,17 +13,19 @@ import sys
 
 def get_setting(key):
     """Get the secret variable or return explicit exception."""
-
-    base_dir = str(os.path.dirname(__file__))
-
-    with open(base_dir + "/config.json") as f:
-        config_json = json.loads(f.read())
-
     try:
-        return config_json[key]
+        base_dir = str(os.path.dirname(__file__))
+        print("BASE DIR: " + base_dir)
+
+        with open(base_dir.join("/config.json")) as f:
+            config_json = json.loads(f.read())
+
+            return config_json[key]
     except KeyError:
         error_msg = "Set the {0} environment variable".format(key)
-        raise Exception(error_msg)
+        raise KeyError(error_msg)
+    except Exception as e:
+        raise Exception("Some error occurred: ", e)
 
 
 def which(program):
