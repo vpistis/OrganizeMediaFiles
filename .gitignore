@@ -17,3 +17,4 @@ web/WEB-INF/classes
 .idea
 .vagrant
 *.log
+/venv/
