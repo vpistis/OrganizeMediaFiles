@@ -1,7 +1,7 @@
 # OrganizeMediaFiles Alpha
 
 This project is a collection of Python scripts that help to organize media
-files into a directory tree "year/month" based on file metadata, using [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
+files into a directory tree "year/month" based on file metadata, using [exiftool](https://exiftool.org/)
 
 Used by me into my personal [Nextcloud](https://www.nextcloud.com) installation to organize unsorted files.
 Strongly inspired by: https://github.com/OneLogicalMyth/Random-Scripts/blob/master/NextCloud/SortPictures.py
@@ -15,7 +15,7 @@ This picture describe the final result:
 
 ## Features
 + manages duplicate files due to milliseconds difference (the new file uses the same old name).
-+ support all file types supported by [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/)
++ support all file types supported by [exiftool](https://exiftool.org/)
 + proccess video and photo at same time (see `config.json`)
 + if exists, add sub second time original (fraction of seconds) to file name
 
@@ -27,8 +27,13 @@ Alternatively download [tarball](https://github.com/vpistis/OrganizeMediaFiles/t
 No installation required, it's a simple python script :) It run in `python`.
 
 ## Requirements
-Install [exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/) commandline:
+In order to use the script, is necessary install at least [exiftool](https://exiftool.org/)
+
+### Debian based
 `sudo apt-get install exiftool`
+
+### MacOS
+`brew install exiftool`
 
 ## Usage
 Configure using `config.json` and run with python:
@@ -57,6 +62,7 @@ If `true` append the original file name at the end of new created file.
 Default: `"DATE_FORMAT_OUTPUT": "%Y%m%d_%H%M%S"`.
 The date output string in python used to name the new created file.
 Used only if `RENAME_SORTED_FILE=true`.
+
 ### PROCESS_IMAGES
 Default: `"PROCESS_IMAGES": true`.
 If `true` process image files according to the `IMAGE_FILES_EXTENSIONS`.
@@ -99,7 +105,7 @@ Launch nextcloud scan command as a `"NEXTCLOUD_USER"`.
 # LICENSE
 MIT License
 
-Copyright (c) 2016 Valentino Pistis
+Copyright (c) 2022 Valentino Pistis
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

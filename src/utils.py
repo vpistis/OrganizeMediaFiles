@@ -15,9 +15,10 @@ def get_setting(key):
     """Get the secret variable or return explicit exception."""
     try:
         base_dir = str(os.path.dirname(__file__))
-        print("BASE DIR: " + base_dir)
-
-        with open(base_dir.join("/config.json")) as f:
+        print("BASE DIR: {}".format(base_dir))
+        print("KEY: {}".format(key))
+        print("config.json: {}".format(os.path.join(base_dir,"config.json")))
+        with open(os.path.join(base_dir,"config.json")) as f:
             config_json = json.loads(f.read())
 
             return config_json[key]
@@ -61,7 +62,9 @@ class Logger(object):
 
     def __init__(self):
         self.terminal = sys.stdout
-        self.log = open(get_setting("LOG_FILE"), "a")
+        log_file_path = get_setting("LOG_FILE")
+        print("LOG_FILE PATH: {}".format(log_file_path))
+        self.log = open(log_file_path, "a")
 
     def write(self, message):
         self.terminal.write(message)
