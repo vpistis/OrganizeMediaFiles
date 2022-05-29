@@ -54,10 +54,17 @@ def get_create_date(filename):
     Get creation date from file metadata
 
     :param filename:
-    :return:
+    :return: [day, month, year, "%Y:%m:%d %H:%M:%S"]
     """
     command = ["exiftool", "-CreateDate", "-s3", "-fast2", filename]
-    metadata = subprocess.check_output(command, universal_newlines=True)
+    create_date = subprocess.check_output(command, universal_newlines=True)
+
+    if not create_date:
+        command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
+        datetime_original = subprocess.check_output(command, universal_newlines=True)
+        metadata = datetime_original
+    else:
+        metadata = create_date
 
     try:
         # Grab date taken
@@ -152,14 +159,29 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
         num_files_skipped = 0
 
         for file in os.listdir(_src_path):
-            if file.lower().endswith(_files_extensions):
+
+            abs_file_path = "{}/{}".format(_src_path, file)
+
+            if os.path.isdir(abs_file_path):
+                print("Found a directory {} ...searhing in it for new files.".format(abs_file_path))
+                _num_files_processed, _num_files_removed, _num_files_copied, _num_files_skipped = organize_files(
+                    abs_file_path, _dest_path, _files_extensions, _filename_suffix)
+
+                num_files_processed += _num_files_processed
+                num_files_removed += _num_files_removed
+                num_files_copied += _num_files_copied
+                num_files_skipped += _num_files_skipped
+
+            elif os.path.isfile(abs_file_path) and file.lower().endswith(_files_extensions):
 
                 num_files_processed += 1
 
                 filename = _src_path + os.sep + file
                 file_ext = get_file_ext(filename)
                 date_info = get_create_date(filename)
-
+                if not date_info:
+                    print("Skipped No Creation Date metadata for file: {}".format(abs_file_path))
+                    continue
                 try:
                     out_filepath = _dest_path + os.sep + date_info[2] + os.sep + date_info[1]
                     if RENAME_SORTED_FILES:
@@ -219,6 +241,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                     return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
                 except None:
                     print('File has no metadata skipped {}'.format(filename))
+
     return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
 
 
