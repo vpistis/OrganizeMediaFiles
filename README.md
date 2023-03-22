@@ -32,7 +32,8 @@ No installation required, it's a simple python script :) It run in `python`.
 
 ## Requirements
 
-In order to use the script, is necessary install at least [exiftool](https://exiftool.org/)
+In order to use the script, is necessary install at least [exiftool](https://exiftool.org/).
+Also install all `requirements.txt`
 
 ### Debian based
 
