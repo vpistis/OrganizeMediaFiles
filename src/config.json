@@ -1,5 +1,6 @@
 {
   "LOG_LEVEL": "INFO",
+  "LOG_PATH": "/tmp",
   "RENAME_SORTED_FILES": false,
   "REMOVE_OLD_FILES": false,
   "APPEND_ORIG_FILENAME": false,
