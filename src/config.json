@@ -1,10 +1,9 @@
 {
-  "LOG_FILE": "organize_media_files.log",
+  "LOG_LEVEL": "INFO",
   "RENAME_SORTED_FILES": false,
   "REMOVE_OLD_FILES": false,
   "APPEND_ORIG_FILENAME": false,
   "DATE_FORMAT_OUTPUT": "%Y%m%d_%H%M%S",
-
   "PROCESS_IMAGES": true,
   "IMAGE_FILENAME_SUFFIX": "IMG_",
   "IMAGES_SOURCE_PATH": "/media/drivemount/user/files/FilesToSort",
@@ -14,16 +13,15 @@
     ".gif",
     ".tiff"
   ],
-
   "PROCESS_VIDEOS": false,
   "VIDEO_FILENAME_SUFFIX": "VID_",
   "VIDEOS_SOURCE_PATH": "/media/drivemount/user/files/FilesToSort",
   "VIDEOS_DESTINATION_PATH": "/media/drivemount/user/files/FilesSorted",
   "VIDEO_FILES_EXTENSIONS": [
     ".mp4",
-    ".3gp"
+    ".3gp",
+    ".mov"
   ],
-
   "NEXTCLOUD": false,
   "NEXTCLOUD_PATH": "/var/www/html/nextcloud",
   "NEXTCLOUD_USER": "www-data"

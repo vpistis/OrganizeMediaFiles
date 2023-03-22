@@ -17,8 +17,8 @@ def get_setting(key):
         base_dir = str(os.path.dirname(__file__))
         print("BASE DIR: {}".format(base_dir))
         print("KEY: {}".format(key))
-        print("config.json: {}".format(os.path.join(base_dir,"config.json")))
-        with open(os.path.join(base_dir,"config.json")) as f:
+        print("config.json: {}".format(os.path.join(base_dir, "../config.json")))
+        with open(os.path.join(base_dir, "../config.json")) as f:
             config_json = json.loads(f.read())
 
             return config_json[key]
