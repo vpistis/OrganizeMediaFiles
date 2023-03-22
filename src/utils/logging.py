@@ -6,11 +6,14 @@ from pathlib import WindowsPath
 """
 Internal Module Logger
 """
-from generic import get_setting
+from utils.generic import get_setting
+try:
+    LOG_DIR = os.path.join(os.path.dirname(get_setting("LOG_LEVEL")), "logs", date.today().strftime("%Y-%m-%d"))
+except:
+    BASEPATH = os.path.dirname(__file__)
+    print("BASEPATH: {}".format(BASEPATH))
+    LOG_DIR = os.path.join(os.path.dirname(BASEPATH), "logs", date.today().strftime("%Y-%m-%d"))
 
-BASEPATH = os.path.dirname(__file__)
-print("BASEPATH: {}".format(BASEPATH))
-LOG_DIR = os.path.join(os.path.dirname(BASEPATH), "logs", date.today().strftime("%Y-%m-%d"))
 POSIX = 'posix'
 # LOG_LEVEL_INFO = logging.INFO
 # LOG_LEVEL_DEBUG = logging.DEBUG
