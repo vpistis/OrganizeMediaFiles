@@ -54,15 +54,15 @@ Configure using `config.json`
 
 ## Configuration
 
-**Important**: process only photo/video (and maybe audio) files with specified extensions.
+**Important**: process only photo/video files with specified extensions.
 Use the `config.json` to change paths and other stuff.
 
 **All paths are intended without any escaping char,like backslashes**
 
-### LOG_FILE
+### LOG_LEVEL
 
-Default: `"LOG_FILE": "organize_media_files.log"`.
-Where is placed the log file.
+Default: `"LOG_LEVEL": "INFO"`
+Log files are in the source directory
 
 ### RENAME_SORTED_FILES
 

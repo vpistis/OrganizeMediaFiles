@@ -17,11 +17,14 @@ import filecmp
 import os
 import shutil
 import subprocess
-import sys
 import timeit
-from utils import Logger, get_setting, which
+from utils.generic import get_setting, which
+from utils import logging
 
-sys.stdout = Logger()
+# from utils import get_access_token
+logger = logging.get_logger("main")
+log_file = logging.get_logger_file("main")
+# sys.stdout = Logger()
 
 PROCESS_IMAGES = get_setting("PROCESS_IMAGES")
 PROCESS_VIDEOS = get_setting("PROCESS_VIDEOS")
@@ -58,15 +61,21 @@ def get_create_date(filename):
     """
     command = ["exiftool", "-CreateDate", "-s3", "-fast2", filename]
     create_date = subprocess.check_output(command, universal_newlines=True)
+    logger.debug("command: {}".format(command))
+    logger.debug("create_date: {}".format(create_date))
 
     if not create_date:
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
         datetime_original = subprocess.check_output(command, universal_newlines=True)
         metadata = datetime_original
+        logger.debug("command: {}".format(command))
+        logger.debug("datetime_original: {}".format(datetime_original))
     if not metadata:
         command = ["exiftool", "-filemodifydate", "-s3", "-fast2", filename]
         file_modify_date = subprocess.check_output(command, universal_newlines=True)
         metadata = file_modify_date.split("+")[0]
+        logger.debug("command: {}".format(command))
+        logger.debug("file_modify_date: {}".format(file_modify_date))
 
     try:
         # Grab date taken
@@ -79,11 +88,12 @@ def get_create_date(filename):
 
         # New Filename
         output = [day, month, year, datetaken_object.strftime(DATE_FORMAT_OUTPUT)]
+        logger.debug("output: {}".format(output))
         return output
 
     except Exception as e:
-        print("{}".format(e))
-        print("exiftool is not installed or datetime is unknown")
+        logger.exception("{}".format(e))
+        logger.exception("exiftool is not installed or datetime is unknown")
         return None
 
 
@@ -97,11 +107,12 @@ def get_sub_sec_time_original(filename):
     try:
         command = ["exiftool", "-SubSecTimeOriginal", "-s3", "-fast2", filename]
         metadata = subprocess.check_output(command, universal_newlines=True)
-        # print(str(metadata.rstrip()))
+        logger.debug("command: {}".format(command))
+        logger.debug("metadata: {}".format(metadata))
         return metadata.rstrip()
     except Exception as e:
-        print("{}".format(e))
-        print("exiftool is installed?")
+        logger.exception("{}".format(e))
+        logger.exception("exiftool is installed?")
         return None
 
 
@@ -115,11 +126,12 @@ def get_file_name(filename):
     try:
         command = ["exiftool", "-filename", "-s3", "-fast2", filename]
         metadata = subprocess.check_output(command, universal_newlines=True)
-        # print(str(metadata.rstrip()))
+        logger.debug("command: {}".format(command))
+        logger.debug("metadata: {}".format(metadata))
         return metadata.rstrip()
     except Exception as e:
-        print("{}".format(e))
-        print("exiftool is installed?")
+        logger.exception("{}".format(e))
+        logger.exception("exiftool is installed?")
         return None
 
 
@@ -132,6 +144,7 @@ def get_file_ext(filename):
     :return:
     """
     extension = ".{}".format(get_file_name(filename).split(".")[-1])
+    logger.debug("file_extension: {}".format(extension))
     return extension
 
 
@@ -149,10 +162,10 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
     # check if destination path is existing create if not
     if not os.path.exists(_dest_path):
         os.makedirs(_dest_path)
-        print("Destination path created: {}".format(_dest_path))
+        logger.debug("Destination path created: {}".format(_dest_path))
 
     if len(os.listdir(_src_path)) <= 0:
-        print("No files in path: {}".format(_src_path))
+        logger.warning("No files in path: {}".format(_src_path))
         return 0, 0, 0
     else:
         num_files_processed = 0
@@ -163,9 +176,10 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
         for file in os.listdir(_src_path):
 
             abs_file_path = "{}/{}".format(_src_path, file)
+            logger.debug("abs_file_path: {}".format(abs_file_path))
 
             if os.path.isdir(abs_file_path):
-                print("Found a directory {} ...searching in it for new files.".format(abs_file_path))
+                logger.info("Found a directory {} ...searching in it for new files.".format(abs_file_path))
                 _num_files_processed, _num_files_removed, _num_files_copied, _num_files_skipped = organize_files(
                     abs_file_path, _dest_path, _files_extensions, _filename_suffix)
 
@@ -182,7 +196,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                 file_ext = get_file_ext(filename)
                 date_info = get_create_date(filename)
                 if not date_info:
-                    print("Skipped No Creation Date metadata for file: {}".format(abs_file_path))
+                    logger.warning("Skipped No Creation Date metadata for file: {}".format(abs_file_path))
                     continue
                 try:
                     out_filepath = _dest_path + os.sep + date_info[2] + os.sep + date_info[1]
@@ -210,7 +224,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                             # the old file name exists...skip file
                             os.remove(out_filename + '_duplicate')
                             num_files_skipped += 1
-                            print("Skipped file: {}".format(filename))
+                            logger.warning("Skipped file: {}".format(filename))
                             continue
                         else:
                             # new dest path but old filename, file duplicate i the destination
@@ -222,27 +236,27 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                                     # the old file name exists...skip file
                                     os.remove(out_filename + '_duplicate')
                                     num_files_skipped += 1
-                                    print("Skipped file: {}".format(filename))
+                                    logger.warning("Skipped file: {}".format(filename))
                                     continue
 
                     # copy the file to the organised structure
                     shutil.copy2(filename, out_filename)
                     if filecmp.cmp(filename, out_filename, shallow=False):
                         num_files_copied += 1
-                        print('File copied with success to {}'.format(out_filename))
+                        logger.debug('File copied with success to {}'.format(out_filename))
                         if REMOVE_OLD_FILES:
                             os.remove(filename)
                             num_files_removed += 1
-                            print('Removed old file {}'.format(filename))
+                            logger.info('Removed old file {}'.format(filename))
                     else:
-                        print('File failed to copy :( {}'.format(filename))
+                        logger.warning('File failed to copy :( {}'.format(filename))
 
                 except Exception as e:
-                    print("{}".format(e))
-                    print("Exception occurred")
+                    logger.exception(e)
+                    logger.exception("Exception occurred")
                     return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
                 except None:
-                    print('File has no metadata skipped {}'.format(filename))
+                    logger.exception('File has no metadata skipped {}'.format(filename))
 
     return num_files_processed, num_files_removed, num_files_copied, num_files_skipped
 
@@ -250,39 +264,40 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 # Nextcloud initiate a scan
 def nextcloud_files_scan():
     if NEXTCLOUD:
+        logger.info("Scan Nextcloud files...")
         try:
             subprocess.Popen("sudo -u {} php {}/console.php files:scan --all".format(NEXTCLOUD_USER, NEXTCLOUD_PATH),
                              shell=True, stdout=subprocess.PIPE)
         except Exception as e:
-            print("{}".format(e))
-            print("Exception occurred")
+            logger.exception(e)
+            logger.exception("Exception occurred")
     return
 
 
 def main():
     # check if exiftool is installed
     if not which("exiftool"):
-        print("Please...install exiftool first")
+        logger.error("Please...install exiftool first")
         return
 
-    print("======== {} =======".format(datetime.datetime.now()))
+    logger.info("======== {} =======".format(datetime.datetime.now()))
     if PROCESS_IMAGES:
-        print("Start process images...")
+        logger.info("Start process images...")
         start_time = timeit.default_timer()
         processed, removed, copied, skipped = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
                                                              IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
-        print("End process images in: {} seconds.".format(elapsed))
-        print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
+        logger.info("End process images in: {} seconds.".format(elapsed))
+        logger.info("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
                                                                             removed, copied, skipped))
     if PROCESS_VIDEOS:
-        print("Start process videos...")
+        logger.info("Start process videos...")
         start_time = timeit.default_timer()
         processed, removed, copied, skipped = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
                                                              VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
         elapsed = timeit.default_timer() - start_time
-        print("End process videos in: {} seconds.".format(elapsed))
-        print("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
+        logger.info("End process videos in: {} seconds.".format(elapsed))
+        logger.info("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
                                                                             removed, copied, skipped))
 
     return
