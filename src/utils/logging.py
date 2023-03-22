@@ -6,7 +6,7 @@ from pathlib import WindowsPath
 """
 Internal Module Logger
 """
-from src.utils.generic import get_setting
+from generic import get_setting
 
 BASEPATH = os.path.dirname(__file__)
 print("BASEPATH: {}".format(BASEPATH))
