@@ -63,8 +63,10 @@ def get_create_date(filename):
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
         datetime_original = subprocess.check_output(command, universal_newlines=True)
         metadata = datetime_original
-    else:
-        metadata = create_date
+    if not metadata:
+        command = ["exiftool", "-filemodifydate", "-s3", "-fast2", filename]
+        file_modify_date = subprocess.check_output(command, universal_newlines=True)
+        metadata = file_modify_date.split("+")[0]
 
     try:
         # Grab date taken
@@ -81,7 +83,7 @@ def get_create_date(filename):
 
     except Exception as e:
         print("{}".format(e))
-        print("exiftool is installed?")
+        print("exiftool is not installed or datetime is unknown")
         return None
 
 
@@ -163,7 +165,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
             abs_file_path = "{}/{}".format(_src_path, file)
 
             if os.path.isdir(abs_file_path):
-                print("Found a directory {} ...searhing in it for new files.".format(abs_file_path))
+                print("Found a directory {} ...searching in it for new files.".format(abs_file_path))
                 _num_files_processed, _num_files_removed, _num_files_copied, _num_files_skipped = organize_files(
                     abs_file_path, _dest_path, _files_extensions, _filename_suffix)
 
@@ -204,19 +206,19 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                     # don't overwrite files if the name is the same
                     if os.path.exists(out_filename):
                         shutil.copy2(filename, out_filename + '_duplicate')
-                        if filecmp.cmp(filename, out_filename + '_duplicate'):
+                        if filecmp.cmp(filename, out_filename + '_duplicate', shallow=False):
                             # the old file name exists...skip file
                             os.remove(out_filename + '_duplicate')
                             num_files_skipped += 1
                             print("Skipped file: {}".format(filename))
                             continue
                         else:
-                            # new dest path but old filename
+                            # new dest path but old filename, file duplicate i the destination
                             out_filename = out_filepath + os.sep + file
 
                             if os.path.exists(out_filename):
                                 shutil.copy2(filename, out_filename + '_duplicate')
-                                if filecmp.cmp(filename, out_filename + '_duplicate'):
+                                if filecmp.cmp(filename, out_filename + '_duplicate', shallow=False):
                                     # the old file name exists...skip file
                                     os.remove(out_filename + '_duplicate')
                                     num_files_skipped += 1
@@ -225,7 +227,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
                     # copy the file to the organised structure
                     shutil.copy2(filename, out_filename)
-                    if filecmp.cmp(filename, out_filename):
+                    if filecmp.cmp(filename, out_filename, shallow=False):
                         num_files_copied += 1
                         print('File copied with success to {}'.format(out_filename))
                         if REMOVE_OLD_FILES:
