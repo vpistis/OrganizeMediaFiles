@@ -8,7 +8,7 @@ Internal Module Logger
 """
 from utils.generic import get_setting
 try:
-    LOG_DIR = os.path.join(os.path.dirname(get_setting("LOG_LEVEL")), "logs", date.today().strftime("%Y-%m-%d"))
+    LOG_DIR = os.path.join(get_setting("LOG_DIR"), "logs", date.today().strftime("%Y-%m-%d"))
 except:
     BASEPATH = os.path.dirname(__file__)
     print("BASEPATH: {}".format(BASEPATH))
