@@ -63,6 +63,7 @@ def get_create_date(filename):
     create_date = subprocess.check_output(command, universal_newlines=True)
     logger.debug("command: {}".format(command))
     logger.debug("create_date: {}".format(create_date))
+    metadata = None
 
     if not create_date:
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
