@@ -65,7 +65,7 @@ Use the `config.json` to change paths and other stuff.
 Default: `"LOG_LEVEL": "INFO"`
 Log files are in the source directory
 ### LOG_PATH
-Default: `"LOG_PATH": "/tmp"`.
+Default: `"LOG_DIR": "/tmp"`.
 If not specified use this directory. If you cannot write into this path, maybe the best choice is to use `/tmp`
 ### RENAME_SORTED_FILES
 
