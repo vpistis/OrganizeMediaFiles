@@ -64,9 +64,12 @@ Use the `config.json` to change paths and other stuff.
 
 Default: `"LOG_LEVEL": "INFO"`
 Log files are in the source directory
+
 ### LOG_PATH
+
 Default: `"LOG_DIR": "/tmp"`.
 If not specified use this directory. If you cannot write into this path, maybe the best choice is to use `/tmp`
+
 ### RENAME_SORTED_FILES
 
 Default: `"RENAME_SORTED_FILES": false`.
@@ -82,6 +85,11 @@ If `true` delete old file after creation of new processed file.
 
 Default: `"APPEND_ORIG_FILENAME": false`.
 If `true` append the original file name at the end of new created file.
+
+### REMOVE_SPACE_FROM_FILENAME
+
+Default: `"REMOVE_SPACE_FROM_FILENAME": true`.
+Sometimes some space remains into filename, i want to replace it with underscores: `_`
 
 ### DATE_FORMAT_OUTPUT
 
