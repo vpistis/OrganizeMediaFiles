@@ -66,7 +66,8 @@ def get_create_date(filename):
     logger.debug("command: {}".format(command))
     logger.debug("create_date: {}".format(create_date))
     datetime_original = None
-
+    metadata = None
+    
     if not create_date:
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
         datetime_original = subprocess.check_output(command, universal_newlines=True)
@@ -272,6 +273,31 @@ def nextcloud_files_scan():
     try:
         subprocess.Popen("sudo -u {} php {}/console.php files:scan --all".format(NEXTCLOUD_USER, NEXTCLOUD_PATH),
                          shell=True, stdout=subprocess.PIPE)
+        
+        #then regenerate thumbnail (trully recomended on small servers)
+        #source 1 https://www.bentasker.co.uk/posts/documentation/linux/671-improving-nextcloud-s-thumbnail-response-time.html
+        #source 2 https://rayagainstthemachine.net/linux%20administration/nextcloud-photos/
+        subprocess.Popen("cd {};\
+                         sudo -u {} git clone https://github.com/rullzer/previewgenerator.git; \
+                         sudo -u {} php {}occ config:system:set preview_max_x --value 1080; \
+                         sudo -u {} php {}occ config:system:set preview_max_y --value 1920;\
+                         sudo -u {} php {}occ config:system:set jpeg_quality --value 60;\
+                         sudo -u {} php {}occ config:app:set --value="32 256" previewgenerator squareSizes; \
+                         sudo -u {} php {}occ config:app:set --value="256 384" previewgenerator widthSizes; \
+                         sudo -u {} php {}occ config:app:set --value="256" previewgenerator heightSizes; \
+                         sudo -u {} php {}occ preview:generate-all -vvv;
+                         ".format( NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_PATH),
+                         shell=True, stdout=subprocess.PIPE)
+        
+        
     except Exception as e:
         logger.exception(e)
         logger.exception("Exception occurred")
