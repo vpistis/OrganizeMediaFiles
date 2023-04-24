@@ -277,7 +277,7 @@ def nextcloud_files_scan():
         #then regenerate thumbnail (trully recomended on small servers)
         #source 1 https://www.bentasker.co.uk/posts/documentation/linux/671-improving-nextcloud-s-thumbnail-response-time.html
         #source 2 https://rayagainstthemachine.net/linux%20administration/nextcloud-photos/
-        subprocess.Popen("cd {};\
+        subprocess.Popen("cd {}apps;\
                          sudo -u {} git clone https://github.com/rullzer/previewgenerator.git; \
                          sudo -u {} php {}occ config:system:set preview_max_x --value 1080; \
                          sudo -u {} php {}occ config:system:set preview_max_y --value 1920;\
