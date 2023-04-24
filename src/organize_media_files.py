@@ -42,6 +42,7 @@ VIDEO_FILENAME_SUFFIX = get_setting("VIDEO_FILENAME_SUFFIX")
 # If false copy file and don't remove old file
 REMOVE_OLD_FILES = get_setting("REMOVE_OLD_FILES")
 APPEND_ORIG_FILENAME = get_setting("APPEND_ORIG_FILENAME")
+REMOVE_SPACE_FROM_FILENAME = get_setting("REMOVE_SPACE_FROM_FILENAME")
 # if RENAME_SORTED_FILES=False, use this date format for naming files
 DATE_FORMAT_OUTPUT = get_setting("DATE_FORMAT_OUTPUT")
 # if false, sorted files keep their original name, else rename using CreateDate
@@ -61,8 +62,10 @@ def get_create_date(filename):
     """
     command = ["exiftool", "-CreateDate", "-s3", "-fast2", filename]
     create_date = subprocess.check_output(command, universal_newlines=True)
+    metadata = create_date
     logger.debug("command: {}".format(command))
     logger.debug("create_date: {}".format(create_date))
+    datetime_original = None
 
     if not create_date:
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
@@ -70,7 +73,7 @@ def get_create_date(filename):
         metadata = datetime_original
         logger.debug("command: {}".format(command))
         logger.debug("datetime_original: {}".format(datetime_original))
-    if not metadata:
+    if not metadata and not datetime_original:
         command = ["exiftool", "-filemodifydate", "-s3", "-fast2", filename]
         file_modify_date = subprocess.check_output(command, universal_newlines=True)
         metadata = file_modify_date.split("+")[0]
@@ -176,7 +179,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
         for file in os.listdir(_src_path):
 
             abs_file_path = "{}/{}".format(_src_path, file)
-            logger.debug("abs_file_path: {}".format(abs_file_path))
+            logger.info("File found: {}".format(abs_file_path))
 
             if os.path.isdir(abs_file_path):
                 logger.info("Found a directory {} ...searching in it for new files.".format(abs_file_path))
@@ -212,7 +215,9 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                             out_filename = out_filepath + os.sep + get_file_name(filename) + '_' + file
                         else:
                             out_filename = out_filepath + os.sep + get_file_name(filename)
-
+                    # sometimes into the original file name there is spaces, and i wanto to remove it
+                    if REMOVE_SPACE_FROM_FILENAME:
+                        out_filename = "{}{}".format(out_filename.split(file_ext)[0].strip(" ").replace(" ", "_"), file_ext)
                     # check if destination path is existing create if not
                     if not os.path.exists(out_filepath):
                         os.makedirs(out_filepath)
@@ -243,7 +248,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
                     shutil.copy2(filename, out_filename)
                     if filecmp.cmp(filename, out_filename, shallow=False):
                         num_files_copied += 1
-                        logger.debug('File copied with success to {}'.format(out_filename))
+                        logger.info('File {} copied with success to {}'.format(num_files_copied, out_filename))
                         if REMOVE_OLD_FILES:
                             os.remove(filename)
                             num_files_removed += 1
@@ -263,14 +268,13 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
 # Nextcloud initiate a scan
 def nextcloud_files_scan():
-    if NEXTCLOUD:
-        logger.info("Scan Nextcloud files...")
-        try:
-            subprocess.Popen("sudo -u {} php {}/console.php files:scan --all".format(NEXTCLOUD_USER, NEXTCLOUD_PATH),
-                             shell=True, stdout=subprocess.PIPE)
-        except Exception as e:
-            logger.exception(e)
-            logger.exception("Exception occurred")
+    logger.info("Scan Nextcloud files...")
+    try:
+        subprocess.Popen("sudo -u {} php {}/console.php files:scan --all".format(NEXTCLOUD_USER, NEXTCLOUD_PATH),
+                         shell=True, stdout=subprocess.PIPE)
+    except Exception as e:
+        logger.exception(e)
+        logger.exception("Exception occurred")
     return
 
 
@@ -284,25 +288,35 @@ def main():
     if PROCESS_IMAGES:
         logger.info("Start process images...")
         start_time = timeit.default_timer()
-        processed, removed, copied, skipped = organize_files(IMAGES_SOURCE_PATH, IMAGES_DESTINATION_PATH,
-                                                             IMAGE_FILES_EXTENSIONS, IMAGE_FILENAME_SUFFIX)
-        elapsed = timeit.default_timer() - start_time
-        logger.info("End process images in: {} seconds.".format(elapsed))
-        logger.info("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
-                                                                            removed, copied, skipped))
+        img_processed, img_removed, img_copied, img_skipped = organize_files(IMAGES_SOURCE_PATH,
+                                                                             IMAGES_DESTINATION_PATH,
+                                                                             IMAGE_FILES_EXTENSIONS,
+                                                                             IMAGE_FILENAME_SUFFIX)
+        img_elapsed = timeit.default_timer() - start_time
+
     if PROCESS_VIDEOS:
         logger.info("Start process videos...")
         start_time = timeit.default_timer()
-        processed, removed, copied, skipped = organize_files(VIDEOS_SOURCE_PATH, VIDEOS_DESTINATION_PATH,
-                                                             VIDEO_FILES_EXTENSIONS, VIDEO_FILENAME_SUFFIX)
-        elapsed = timeit.default_timer() - start_time
-        logger.info("End process videos in: {} seconds.".format(elapsed))
-        logger.info("Proccessed: {}. Removed: {}. Copied: {}. Skipped: {}".format(processed,
-                                                                            removed, copied, skipped))
+        vid_processed, vid_removed, vid_copied, vid_skipped = organize_files(VIDEOS_SOURCE_PATH,
+                                                                             VIDEOS_DESTINATION_PATH,
+                                                                             VIDEO_FILES_EXTENSIONS,
+                                                                             VIDEO_FILENAME_SUFFIX)
+        vid_elapsed = timeit.default_timer() - start_time
+    if PROCESS_IMAGES:
+        logger.info("End process IMAGES in: {} seconds.".format(img_elapsed))
+        logger.info("Processed: {}. Removed: {}. Copied: {}. Skipped: {}".format(img_processed,
+                                                                                 img_removed, img_copied, img_skipped))
+        logger.info("Image files are stored in: {}".format(IMAGES_DESTINATION_PATH))
+    if PROCESS_VIDEOS:
+        logger.info("End process VIDEOS in: {} seconds.".format(vid_elapsed))
+        logger.info("Processed: {}. Removed: {}. Copied: {}. Skipped: {}".format(vid_processed,
+                                                                                 vid_removed, vid_copied, vid_skipped))
+        logger.info("Video files are stored in: {}".format(VIDEOS_DESTINATION_PATH))
+    if NEXTCLOUD:
+        nextcloud_files_scan()
 
     return
 
 
 # Execution
 main()
-nextcloud_files_scan()
