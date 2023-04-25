@@ -169,7 +169,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
     if len(os.listdir(_src_path)) <= 0:
         logger.warning("No files in path: {}".format(_src_path))
-        return 0, 0, 0
+        return 0, 0, 0, 0
     else:
         num_files_processed = 0
         num_files_removed = 0
