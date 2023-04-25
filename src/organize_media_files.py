@@ -51,8 +51,17 @@ RENAME_SORTED_FILES = get_setting("RENAME_SORTED_FILES")
 NEXTCLOUD = get_setting("NEXTCLOUD")
 NEXTCLOUD_PATH = get_setting("NEXTCLOUD_PATH")
 NEXTCLOUD_USER = get_setting("NEXTCLOUD_USER")
+NEXTCLOUD_GROUP = get_setting("NEXTCLOUD_GROUP")
 
+# in case you selected NEXTCLOUD=True, this will generate thumbnails
+NC_CONFIG_PREVIEW_MAX_X = get_setting("NC_CONFIG_PREVIEW_MAX_X")
+NC_CONFIG_PREVIEW_MAX_Y = get_setting("NC_CONFIG_PREVIEW_MAX_Y")
+NC_CONFIG_JPEG_QUALITY = get_setting("NC_CONFIG_JPEG_QUALITY")
+NC_PREVIEW_SQUARESIZES = get_setting("NC_PREVIEW_SQUARESIZES")
+NC_PREVIEW_WIDTHSIZES = get_setting("NC_PREVIEW_WIDTHSIZES")
+NC_PREVIEW_HEIGHTSIZES = get_setting("NC_PREVIEW_HEIGHTSIZES")
 
+    
 def get_create_date(filename):
     """
     Get creation date from file metadata
@@ -277,26 +286,28 @@ def nextcloud_files_scan():
         #then regenerate thumbnail (trully recomended on small servers)
         #source 1 https://www.bentasker.co.uk/posts/documentation/linux/671-improving-nextcloud-s-thumbnail-response-time.html
         #source 2 https://rayagainstthemachine.net/linux%20administration/nextcloud-photos/
-        subprocess.Popen("cd {}apps;\
-                         sudo -u {} git clone https://github.com/rullzer/previewgenerator.git; \
-                         sudo -u {} php {}occ config:system:set preview_max_x --value 1080; \
-                         sudo -u {} php {}occ config:system:set preview_max_y --value 1920;\
-                         sudo -u {} php {}occ config:system:set jpeg_quality --value 60;\
-                         sudo -u {} php {}occ config:app:set --value="32 256" previewgenerator squareSizes; \
-                         sudo -u {} php {}occ config:app:set --value="256 384" previewgenerator widthSizes; \
-                         sudo -u {} php {}occ config:app:set --value="256" previewgenerator heightSizes; \
-                         sudo -u {} php {}occ preview:generate-all -vvv;
+        subprocess.Popen("cd {}/apps;\
+                         chown -R {}:{} ./previewgenerator \ 
+                         sudo -u {} bash \
+                         git clone https://github.com/rullzer/previewgenerator.git; \
+                         cd ..; \
+                         php --define apc.enable_cli=1 ./occ config:system:set preview_max_x --value {}; \
+                         php --define apc.enable_cli=1 ./occ config:system:set preview_max_y --value {};\
+                         php --define apc.enable_cli=1 ./occ config:system:set jpeg_quality --value {};\
+                         php --define apc.enable_cli=1 ./occ config:app:set --value="{}" previewgenerator squareSizes; \
+                         php --define apc.enable_cli=1 ./occ config:app:set --value="{}" previewgenerator widthSizes; \
+                         php --define apc.enable_cli=1 ./occ config:app:set --value="{}" previewgenerator heightSizes; \
+                         php --define apc.enable_cli=1 ./occ preview:generate-all -vvv;
                          ".format( NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_GROUP, \
                          NEXTCLOUD_USER, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH, \
-                         NEXTCLOUD_USER, NEXTCLOUD_PATH),
+                         NC_CONFIG_PREVIEW_MAX_X, \
+                         NC_CONFIG_PREVIEW_MAX_Y, \
+                         NC_CONFIG_JPEG_QUALITY, \
+                         NC_PREVIEW_SQUARESIZES, \
+                         NC_PREVIEW_WIDTHSIZES, \
+                         NC_PREVIEW_HEIGHTSIZES),
                          shell=True, stdout=subprocess.PIPE)
-        
         
     except Exception as e:
         logger.exception(e)
