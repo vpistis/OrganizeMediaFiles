@@ -51,8 +51,17 @@ RENAME_SORTED_FILES = get_setting("RENAME_SORTED_FILES")
 NEXTCLOUD = get_setting("NEXTCLOUD")
 NEXTCLOUD_PATH = get_setting("NEXTCLOUD_PATH")
 NEXTCLOUD_USER = get_setting("NEXTCLOUD_USER")
+NEXTCLOUD_GROUP = get_setting("NEXTCLOUD_GROUP")
 
+# in case you selected NEXTCLOUD=True, this will generate thumbnails
+NC_CONFIG_PREVIEW_MAX_X = get_setting("NC_CONFIG_PREVIEW_MAX_X")
+NC_CONFIG_PREVIEW_MAX_Y = get_setting("NC_CONFIG_PREVIEW_MAX_Y")
+NC_CONFIG_JPEG_QUALITY = get_setting("NC_CONFIG_JPEG_QUALITY")
+NC_PREVIEW_SQUARESIZES = get_setting("NC_PREVIEW_SQUARESIZES")
+NC_PREVIEW_WIDTHSIZES = get_setting("NC_PREVIEW_WIDTHSIZES")
+NC_PREVIEW_HEIGHTSIZES = get_setting("NC_PREVIEW_HEIGHTSIZES")
 
+    
 def get_create_date(filename):
     """
     Get creation date from file metadata
@@ -66,6 +75,7 @@ def get_create_date(filename):
     logger.debug("command: {}".format(command))
     logger.debug("create_date: {}".format(create_date))
     datetime_original = None
+    metadata = None
 
     if not create_date:
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
@@ -169,7 +179,7 @@ def organize_files(src_path, dest_path, files_extensions, filename_suffix=""):
 
     if len(os.listdir(_src_path)) <= 0:
         logger.warning("No files in path: {}".format(_src_path))
-        return 0, 0, 0
+        return 0, 0, 0, 0
     else:
         num_files_processed = 0
         num_files_removed = 0
@@ -271,6 +281,32 @@ def nextcloud_files_scan():
     logger.info("Scan Nextcloud files...")
     try:
         subprocess.Popen("sudo -u {} php {}/console.php files:scan --all".format(NEXTCLOUD_USER, NEXTCLOUD_PATH),
+                         shell=True, stdout=subprocess.PIPE)
+        
+        #then regenerate thumbnail (trully recomended on small servers)
+        #source 1 https://www.bentasker.co.uk/posts/documentation/linux/671-improving-nextcloud-s-thumbnail-response-time.html
+        #source 2 https://rayagainstthemachine.net/linux%20administration/nextcloud-photos/
+        subprocess.Popen("cd {}/apps;\
+                         chown -R {}:{} ./previewgenerator \ 
+                         sudo -u {} bash \
+                         git clone https://github.com/rullzer/previewgenerator.git; \
+                         cd ..; \
+                         php --define apc.enable_cli=1 ./occ config:system:set preview_max_x --value {}; \
+                         php --define apc.enable_cli=1 ./occ config:system:set preview_max_y --value {};\
+                         php --define apc.enable_cli=1 ./occ config:system:set jpeg_quality --value {};\
+                         php --define apc.enable_cli=1 ./occ config:app:set --value="{}" previewgenerator squareSizes; \
+                         php --define apc.enable_cli=1 ./occ config:app:set --value="{}" previewgenerator widthSizes; \
+                         php --define apc.enable_cli=1 ./occ config:app:set --value="{}" previewgenerator heightSizes; \
+                         php --define apc.enable_cli=1 ./occ preview:generate-all -vvv;
+                         ".format( NEXTCLOUD_PATH, \
+                         NEXTCLOUD_USER, NEXTCLOUD_GROUP, \
+                         NEXTCLOUD_USER, \
+                         NC_CONFIG_PREVIEW_MAX_X, \
+                         NC_CONFIG_PREVIEW_MAX_Y, \
+                         NC_CONFIG_JPEG_QUALITY, \
+                         NC_PREVIEW_SQUARESIZES, \
+                         NC_PREVIEW_WIDTHSIZES, \
+                         NC_PREVIEW_HEIGHTSIZES),
                          shell=True, stdout=subprocess.PIPE)
     except Exception as e:
         logger.exception(e)
