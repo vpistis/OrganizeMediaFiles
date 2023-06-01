@@ -76,7 +76,7 @@ def get_create_date(filename):
     logger.debug("create_date: {}".format(create_date))
     datetime_original = None
     metadata = None
-    
+
     if not create_date:
         command = ["exiftool", "-DateTimeOriginal", "-s3", "-fast2", filename]
         datetime_original = subprocess.check_output(command, universal_newlines=True)
@@ -308,7 +308,6 @@ def nextcloud_files_scan():
                          NC_PREVIEW_WIDTHSIZES, \
                          NC_PREVIEW_HEIGHTSIZES),
                          shell=True, stdout=subprocess.PIPE)
-        
     except Exception as e:
         logger.exception(e)
         logger.exception("Exception occurred")
