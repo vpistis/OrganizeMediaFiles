@@ -26,5 +26,12 @@
   ],
   "NEXTCLOUD": false,
   "NEXTCLOUD_PATH": "/var/www/html/nextcloud",
-  "NEXTCLOUD_USER": "www-data"
+  "NEXTCLOUD_USER": "www-data",
+  "NEXTCLOUD_GROUP": "www-data",
+  "NC_CONFIG_PREVIEW_MAX_X": "1080",
+  "NC_CONFIG_PREVIEW_MAX_Y": "1920",
+  "NC_CONFIG_JPEG_QUALITY": "60",
+  "NC_PREVIEW_SQUARESIZES": "32 256",
+  "NC_PREVIEW_WIDTHSIZES": "256 384",
+  "NC_PREVIEW_HEIGHTSIZES": "256"
 }
